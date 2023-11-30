@@ -9,6 +9,4 @@ Search for something: `node search.js frogs`
 2. Clone the repo and CD into it
 3. Run `npm i` to install dependencies
 
-&nbsp;
-
 ©️ 2023 Pepsearch
