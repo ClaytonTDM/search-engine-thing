@@ -1,0 +1,21 @@
+{
+  "name": "nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^18.0.6",
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12",
+    "follow-redirects": "^1.15.3",
+    "node-fetch": "^3.2.6",
+    "robots": "^0.10.1",
+    "sqlite3": "^5.1.6"
+  }
+}
