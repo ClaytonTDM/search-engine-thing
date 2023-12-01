@@ -3,14 +3,14 @@ const cheerio = require('cheerio');
 const sqlite3 = require('sqlite3').verbose();
 const robots = require('robots');
 const process = require('process');
-const { URL } = require('url'); // Add this line at the top with other require statements
+const { URL } = require('url');
 
 // Create and connect to a SQLite database
 const db = new sqlite3.Database('crawldata.db');
 
 // Create a table to store crawled data
 db.serialize(() => {
-  db.run("CREATE TABLE IF NOT EXISTS crawled_data (url TEXT, title TEXT, description TEXT)");
+  db.run("CREATE TABLE IF NOT EXISTS crawled_data (url TEXT, title TEXT, description TEXT, backlinks INTEGER DEFAULT 1)");
 });
 
 // Extract the starting URL from the command line arguments
@@ -25,9 +25,12 @@ const visitedUrls = new Set();
 const robotsParser = new robots.RobotsParser();
 
 async function crawl(url) {
+  const backlinks = [];
   try {
     // Check if the URL has already been visited
     if (visitedUrls.has(url)) {
+      // Increment the backlink count
+      db.run("UPDATE crawled_data SET backlinks = backlinks + 1 WHERE url = ?", [url]);
       return;
     }
 
@@ -58,7 +61,7 @@ async function crawl(url) {
       maxRedirects: 5, // Set the maximum number of redirects to follow
       validateStatus: status => status < 400, // Allow following redirects for 4xx errors
     });
-    
+
     const $ = cheerio.load(response.data);
 
     // Extract metadata
@@ -72,13 +75,13 @@ async function crawl(url) {
 
     // Save data to SQLite database
     description = description.substring(0, 200);
-    
-    db.run("INSERT INTO crawled_data (url, title, description) VALUES (?, ?, ?)", [url, title, description]);
+
+    db.run("INSERT INTO crawled_data (url, title, description, backlinks) VALUES (?, ?, ?, ?)", [url, title, description, backlinks]);
     console.log(`Saved to database: ${url}`)
 
     // Extract links and crawl recursively
     const links = [];
-    $('a').each((index, element) => {
+    $('a').each((_, element) => {
       const link = $(element).attr('href');
       if (link && link.startsWith('http')) {
         links.push(link);

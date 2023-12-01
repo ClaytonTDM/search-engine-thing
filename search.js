@@ -1,17 +1,19 @@
+const express = require('express');
+const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
+const url = require('url');
 
-// Connect to the SQLite database
 const db = new sqlite3.Database('crawldata.db');
+const query = `
+SELECT url, title, description, backlinks
+FROM crawled_data
+WHERE title LIKE ? OR description LIKE ?
+ORDER BY backlinks DESC
+`;
 
-// Function to search for an exact term in the database
 function searchDatabase(term) {
   return new Promise((resolve, reject) => {
-    const query = `
-      SELECT * FROM crawled_data
-      WHERE title = ? COLLATE NOCASE OR description = ? COLLATE NOCASE
-    `;
-
-    db.all(query, [term, term], (err, rows) => {
+    db.all(query, [`%${term}%`, `%${term}%`], (err, rows) => {
       if (err) {
         reject(err);
       } else {
@@ -21,26 +23,42 @@ function searchDatabase(term) {
   });
 }
 
-// Get the search term from the command line arguments
-const searchTerm = process.argv.slice(2).join(' ').trim(); // Handle multiple words in the search term and trim whitespace
+const app = express();
 
-if (!searchTerm) {
-  console.error('Please provide a search term.');
-  process.exit(1);
-}
+app.use(cors());
 
-// Perform the search
-searchDatabase(searchTerm)
-  .then(results => {
-    console.log(`Search results for "${searchTerm}":`);
-    results.forEach(result => {
-      console.log(`URL: ${result.url}\nTitle: ${result.title}\nDescription: ${result.description}\n`);
+app.get('/search', (req, res) => {
+  const searchTerm = req.query.term;
+  const site = req.query.site;
+
+  if (!searchTerm) {
+    return res.status(400).json({ error: 'Please provide a search term.' });
+  }
+
+  searchDatabase(searchTerm)
+    .then(results => {
+      let modifiedResults = results.map(result => ({
+        url: result.url,
+        title: result.title,
+        description: result.description,
+        rank: result.backlinks,
+      }));
+
+      // If a site was specified, filter the results to only include those from that site
+      if (site) {
+        modifiedResults = modifiedResults.filter(result => {
+          const resultUrl = url.parse(result.url);
+          const siteUrl = url.parse(`http://${site}`); // Add http:// to ensure correct parsing
+          return resultUrl.hostname === siteUrl.hostname;
+        });
+      }
+
+      res.json(modifiedResults);
+    })
+    .catch(error => {
+      res.status(500).json({ error: `Search failed: ${error.message}` });
     });
-  })
-  .catch(error => {
-    console.error(`Search failed: ${error.message}`);
-  })
-  .finally(() => {
-    // Close the SQLite database connection after the search is completed
-    db.close();
-  });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
