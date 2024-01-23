@@ -131,3 +131,4 @@ dist
 
 # search db
 *.db
+*.db-journal

@@ -6,7 +6,7 @@ const process = require('process');
 const { URL } = require('url');
 
 // Create and connect to a SQLite database
-const db = new sqlite3.Database('crawldata.db');
+const db = new sqlite3.Database('crawldata_web.db');
 
 // Create a table to store crawled data
 db.serialize(() => {
@@ -17,7 +17,7 @@ db.serialize(() => {
 const startUrl = process.argv[2];
 
 if (!startUrl) {
-  console.error('Usage: node index.js <starting-url>');
+  console.error('Usage: node web.js <starting-url>');
   process.exit(1);
 }
 

@@ -3,7 +3,7 @@ const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
 const url = require('url');
 
-const db = new sqlite3.Database('crawldata.db');
+const db = new sqlite3.Database('crawldata_web.db');
 const query = `
 SELECT url, title, description, backlinks
 FROM crawled_data
