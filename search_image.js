@@ -28,7 +28,7 @@ const app = express();
 app.use(cors());
 
 app.get('/search', (req, res) => {
-  const searchTerm = req.query.term;
+  const searchTerm = req.query.q;
   const site = req.query.site;
 
   if (!searchTerm) {
