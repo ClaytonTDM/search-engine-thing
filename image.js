@@ -10,7 +10,7 @@ const db = new sqlite3.Database('crawldata_image.db');
 
 // Create a table to store crawled data
 db.serialize(() => {
-  db.run("CREATE TABLE IF NOT EXISTS crawled_data (url TEXT, title TEXT, alt TEXT)");
+  db.run("CREATE TABLE IF NOT EXISTS crawled_data (url TEXT, title TEXT, alt TEXT, backlinks INTEGER DEFAULT 1)");
 });
 
 // Extract the starting URL from the command line arguments
@@ -28,6 +28,8 @@ async function crawl(url) {
   try {
     // Check if the URL has already been visited
     if (visitedUrls.has(url)) {
+      // Increment the backlink count
+      db.run("UPDATE crawled_data SET backlinks = backlinks + 1 WHERE url = ?", [url]);
       return;
     }
 
@@ -76,7 +78,7 @@ async function crawl(url) {
 
     // Save data to SQLite database
     images.forEach(image => {
-      db.run("INSERT INTO crawled_data (url, title, alt) VALUES (?, ?, ?)", [image.imageUrl, title, image.altText]);
+      db.run("INSERT INTO crawled_data (url, title, alt, backlinks) VALUES (?, ?, ?, 1)", [image.imageUrl, title, image.altText]);
       console.log(`Saved to database: ${image.imageUrl}`)
     });
 
