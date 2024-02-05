@@ -9,5 +9,3 @@ Start the server: `node search.js` (This will crawl automatically)
 1. Download the latest version of NodeJS from https://nodejs.org/
 2. Clone the repo and `cd` into it
 3. Run `npm i` to install dependencies
-
-©️ 2023 Pepsearch
